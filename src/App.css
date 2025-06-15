@@ -1,45 +1,109 @@
-#root {
-	max-width: 1280px;
-	margin: 0 auto;
-	padding: 2rem;
+/* General Body Styles */
+body {
+	display: flex;
+	flex-direction: column;
+	margin: 0;
+	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+		'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+		sans-serif;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	background-color: #1a1a1a;
+	/* Dark background */
+	color: #e1e1e1;
+	/* Light text */
+}
+
+/* Main App Container */
+.App {
 	text-align: center;
 }
 
-.logo {
-	height: 6em;
-	padding: 1.5em;
-	will-change: filter;
-	transition: filter 300ms;
-}
-.logo:hover {
-	filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-	filter: drop-shadow(0 0 2em #61dafbaa);
-}
-.logo.cloudflare:hover {
-	filter: drop-shadow(0 0 2em #f6821faa);
+.App-header {
+	min-height: 100vh;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	font-size: calc(10px + 2vmin);
 }
 
-@keyframes logo-spin {
-	from {
-		transform: rotate(0deg);
-	}
-	to {
-		transform: rotate(360deg);
-	}
-}
-
-@media (prefers-reduced-motion: no-preference) {
-	a:nth-of-type(2) .logo {
-		animation: logo-spin infinite 20s linear;
-	}
-}
-
+/* Card styles for grouping content */
 .card {
+	background-color: #242424;
+	border-radius: 8px;
 	padding: 2em;
+	margin-top: 2rem;
+	width: 100%;
+	max-width: 500px;
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+	border: 1px solid #333;
 }
 
-.read-the-docs {
-	color: #888;
+h1 {
+	font-weight: 500;
+	color: #61dafb;
+	/* React blue for a splash of color */
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 0;
+	border-bottom: 1px solid #444;
+	padding-bottom: 0.5rem;
+	margin-bottom: 1rem;
+}
+
+/* Form Styles */
+form {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+}
+
+input[type="text"],
+input[type="email"] {
+	padding: 12px 15px;
+	border-radius: 6px;
+	border: 1px solid #555;
+	background-color: #1a1a1a;
+	color: #e1e1e1;
+	font-size: 1rem;
+	transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus {
+	outline: none;
+	border-color: #61dafb;
+	box-shadow: 0 0 0 3px rgba(97, 218, 251, 0.2);
+}
+
+button[type="submit"] {
+	padding: 12px 20px;
+	border: none;
+	border-radius: 6px;
+	background-color: #61dafb;
+	color: #1a1a1a;
+	font-size: 1rem;
+	font-weight: bold;
+	cursor: pointer;
+	transition: background-color 0.3s;
+}
+
+button[type="submit"]:hover {
+	background-color: #88eaff;
+}
+
+
+/* User List Styles */
+ul {
+	list-style-type: none;
+	padding: 0;
+	margin: 0;
+	text-align: left;
+}
+
+li {
+	padding: 1
 }
