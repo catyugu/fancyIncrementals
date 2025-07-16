@@ -7,7 +7,7 @@ export default function HomePage() {
             <p className="home-subtitle">Select a game to play</p>
             <div className="game-list">
                 {/* Use the Link component for navigation */}
-                <Link to="/clicker" className="game-select-button">
+                <Link to="/testgame" className="game-select-button">
                     Button Clicker
                 </Link>
                 <button className="game-select-button disabled" disabled>

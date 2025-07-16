@@ -5,19 +5,23 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "my-cloudflare-app",
-	"main": "worker/index.js",
+	"main": "worker/src/index.js",
+	"pages_build_output_dir": "dist",
 	"compatibility_date": "2025-06-14",
 	"assets": {
-		"not_found_handling": "single-page-application"
+		"not_found_handling": "single-page-application",
+		"directory": "./dist",
+		"run_worker_first": ["/api/*", "!/api/docs/*"]
 	},
 	"observability": {
 		"enabled": true
 	},
-	"d1_databases": [
+
+	"r2_buckets": [
 		{
-			"binding": "DB",
-			"database_name": "my-database-test",
-			"database_id": "4547e1d8-a5b6-4fd2-b411-d73bf866f323"
+			"binding": "GAME_SAVES_BUCKET",
+			"bucket_name": "incremental-bucket",
+			"preview_bucket_name": "incremental-bucket",
 		}
 	]
 	/**
