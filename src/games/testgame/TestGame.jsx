@@ -42,7 +42,6 @@ export default function TestGame() {
             localStorage.setItem('testgame', JSON.stringify({ score, clickPower, autoClickers }));
             console.log('Game state saved to local storage.');
         }, 5000);
-        return () => clearInterval(saveInterval);
     }, [email, score, autoClickers]);
 
     // When loading the page, check for saved game data
