@@ -1,6 +1,5 @@
 CREATE TABLE IF NOT EXISTS
-    users (
-        id INTEGER PRIMARY KEY,
-        name TEXT NOT NULL,
-        email TEXT NOT NULL UNIQUE
+    test_game_saves (
+        email TEXT PRIMARY KEY,
+        score INTEGER NOT NULL
     );
