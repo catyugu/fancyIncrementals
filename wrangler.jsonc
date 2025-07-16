@@ -4,7 +4,7 @@
  */
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "my-cloudflare-app",
+	"name": "fancy-incrementals",
 	"main": "worker/src/index.js",
 	"pages_build_output_dir": "dist",
 	"compatibility_date": "2025-06-14",
