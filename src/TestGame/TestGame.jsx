@@ -53,6 +53,7 @@ export default function TestGame() {
             const data = await response.json();
             setMessage(data.message || data.error);
         } catch (error) {
+            console.error('Error saving progress:', error);
             setMessage('Failed to save progress.');
         }
     };
@@ -72,6 +73,7 @@ export default function TestGame() {
                 setMessage(data.error);
             }
         } catch (error) {
+            console.error(error);
             setMessage('Failed to load progress.');
         }
     };
