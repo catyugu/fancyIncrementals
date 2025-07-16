@@ -6,7 +6,6 @@
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "fancy-incrementals",
 	"main": "worker/src/index.js",
-	"pages_build_output_dir": "dist",
 	"compatibility_date": "2025-06-14",
 	"assets": {
 		"not_found_handling": "single-page-application",
