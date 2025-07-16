@@ -45,7 +45,7 @@ export default function TestGame() {
             return;
         }
         try {
-            const response = await fetch('/api/save', {
+            const response = await fetch('/api/testgame/save', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, score }),
@@ -64,7 +64,7 @@ export default function TestGame() {
             return;
         }
         try {
-            const response = await fetch(`/api/load?email=${email}`);
+            const response = await fetch(`/api/testgame/load?email=${email}`);
             const data = await response.json();
             if (response.ok) {
                 setScore(data.score);

@@ -2,7 +2,7 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
-    if (url.pathname === '/api/save' && request.method === 'POST') {
+    if (url.pathname === '/api/testgame/save' && request.method === 'POST') {
       try {
         const { email, score } = await request.json();
         if (!email || typeof score !== 'number') {
@@ -18,7 +18,7 @@ export default {
       }
     }
 
-    if (url.pathname === '/api/load' && request.method === 'GET') {
+    if (url.pathname === '/api/testgame/load' && request.method === 'GET') {
       try {
         const email = url.searchParams.get('email');
         if (!email) {
