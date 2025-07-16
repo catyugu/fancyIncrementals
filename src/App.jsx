@@ -1,7 +1,7 @@
 // import React, { useState, useEffect } from 'react';
 // Import routing components from react-router-dom
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
-import TestGame from './TestGame/TestGame';
+import TestGame from './games/testgame/TestGame';
 import HomePage from './HomePage/HomePage';
 
 function App() {
@@ -12,7 +12,7 @@ function App() {
           {/* The Routes component defines where your pages will render */}
           <Routes>
             {/* Each Route maps a URL path to a component */}
-            <Route path="/clicker" element={<TestGame />} />
+            <Route path="/testgame" element={<TestGame />} />
             <Route path="/" element={<HomePage />} />
           </Routes>
         </div>
