@@ -4,17 +4,21 @@ This document provides a guide on how to set up, develop, and deploy this full-s
 
 ## **1\. Project Overview**
 
-This project is a platform for hosting and playing incremental games.
+This project is a platform for hosting and playing incremental games. The premier game, **Cosmic Forge**, challenges players to generate Energy, build a cosmic empire, and ascend to gain powerful permanent boosts.
 
 *   **Frontend:** A React application built with Vite, hosted on Cloudflare Pages. It serves as the main hub for discovering and playing games.
 *   **Backend:** A serverless API built with Cloudflare Workers. It will handle game-specific logic and data persistence.
-*   **Storage:** Cloudflare R2 is used for storing game saves.
+*   **Storage:** Cloudflare R2 is used for storing game saves, while `localStorage` is used for client-side persistence.
 
 ## **2\. Features**
 
 *   **React Frontend:** A modern, responsive frontend built with React and Vite.
+*   **Example Game: Cosmic Forge**
+    *   **Advanced Mechanics:** Features multiplicative and exponential upgrades.
+    *   **Ascension System:** Players can reset progress to gain "Stardust" for powerful, permanent boosts.
+    *   **Persistence:** Game state is automatically saved to `localStorage` every 5 seconds.
+    *   **Offline Progress:** Calculates and applies resource gains that occurred while the game was closed.
 *   **Serverless Backend:** A scalable, serverless backend using Cloudflare Workers.
-*   **Game Platform:** A platform for hosting and playing incremental games.
 *   **Cloudflare Integration:** Fully integrated with Cloudflare for deployment, hosting, and storage.
 *   **Code Quality:** ESLint is configured to ensure code quality and consistency.
 
