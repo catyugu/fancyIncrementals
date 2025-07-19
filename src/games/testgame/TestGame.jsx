@@ -7,12 +7,21 @@ export default function TestGame() {
     const [autoClickers, setAutoClickers] = useState(0);
     const [email, setEmail] = useState('');
     const [message, setMessage] = useState('');
+    const [tier, setTier] = useState(0);
+
+    const tiers = [
+        { name: 'Stone Age', scoreRequirement: 0, clickPowerMultiplier: 1 },
+        { name: 'Bronze Age', scoreRequirement: 100, clickPowerMultiplier: 2 },
+        { name: 'Iron Age', scoreRequirement: 500, clickPowerMultiplier: 4 },
+        { name: 'Industrial Age', scoreRequirement: 1000, clickPowerMultiplier: 8 },
+        { name: 'Information Age', scoreRequirement: 5000, clickPowerMultiplier: 16 },
+    ];
 
     const clickPowerCost = Math.floor(10 * Math.pow(1.1, clickPower));
     const autoClickerCost = Math.floor(50 * Math.pow(1.15, autoClickers));
 
     const handleClick = () => {
-        setScore(score + clickPower);
+        setScore(score + clickPower * tiers[tier].clickPowerMultiplier);
     };
 
     const buyClickPower = () => {
@@ -29,6 +38,12 @@ export default function TestGame() {
         }
     };
 
+    const advanceTier = () => {
+        if (score >= tiers[tier + 1].scoreRequirement) {
+            setTier(tier + 1);
+        }
+    };
+
     useEffect(() => {
         const gameLoop = setInterval(() => {
             setScore(prevScore => prevScore + autoClickers);
@@ -39,20 +54,34 @@ export default function TestGame() {
     // Save to local storage per 10 seconds
     useEffect(() => {
         const saveInterval = setInterval(() => {
-            localStorage.setItem('testgame', JSON.stringify({ score, clickPower, autoClickers }));
+            localStorage.setItem('testgame', JSON.stringify({ score, clickPower, autoClickers, tier }));
+            localStorage.setItem('lastActive', Date.now());
             console.log('Game state saved to local storage.');
-        }, 5000);
+        }, 3000);
     }, [email, score, autoClickers]);
 
     // When loading the page, check for saved game data
     useEffect(() => {
+        localStorage.setItem('lastActive', Date.now());
         const savedGame = localStorage.getItem('testgame');
         if (savedGame) {
-            const { score, clickPower, autoClickers } = JSON.parse(savedGame);
+            const { score, clickPower, autoClickers, tier } = JSON.parse(savedGame);
             setScore(score || 0);
             setClickPower(clickPower || 1);
             setAutoClickers(autoClickers || 0);
+            setTier(tier || 0);
         }
+
+        // Calculate offline gain
+        const lastActive = localStorage.getItem('lastActive');
+        if (lastActive) {
+            const offlineTime = (Date.now() - parseInt(lastActive)) / 1000;
+            const offlineGain = offlineTime * autoClickers;
+            setScore(prevScore => prevScore + offlineGain);
+        }
+        return () => {
+            localStorage.setItem('lastActive', Date.now());
+        };
     }, []);
     const handleSave = async () => {
         if (!email) {
@@ -106,10 +135,16 @@ export default function TestGame() {
                     <p className="score-label">Your Score:</p>
                     <p className="score-value">{score}</p>
                     <p className="score-label">Points per second: {autoClickers}</p>
+                    <p className="score-label">Current Tier: {tiers[tier].name}</p>
+                    {tier < tiers.length - 1 && (
+                        <button onClick={advanceTier} className="click-button" disabled={score < tiers[tier + 1].scoreRequirement}>
+                            Advance to {tiers[tier + 1].name} (Cost: {tiers[tier + 1].scoreRequirement})
+                        </button>
+                    )}
                 </div>
 
                 <button onClick={handleClick} className="click-button">
-                    Click Me! (+{clickPower})
+                    Click Me! (+{clickPower * tiers[tier].clickPowerMultiplier})
                 </button>
 
                 <div className="upgrades-container">

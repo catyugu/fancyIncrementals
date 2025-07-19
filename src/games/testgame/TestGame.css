@@ -1,11 +1,9 @@
 /* General Body and App Container Styles */
 body {
     margin: 0;
-    font-family: sans-serif;
-    background-color: #111827;
-    /* gray-900 */
-    color: #f9fafb;
-    /* gray-50 */
+    font-family: 'Roboto', sans-serif;
+    background-color: #0B0C10;
+    color: #C5C6C7;
 }
 
 .app-container {
@@ -19,140 +17,158 @@ body {
 /* Main Game Card */
 .game-card {
     text-align: center;
-    padding: 2rem;
-    /* p-8 */
-    background-color: #1f2937;
-    /* gray-800 */
-    border-radius: 0.5rem;
-    /* rounded-lg */
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    /* shadow-lg */
+    padding: 16px;
+    background-color: #1F2833;
+    border: 1px solid #45A29E;
+    border-radius: 4px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
     width: 100%;
-    max-width: 28rem;
-    /* max-w-md */
+    max-width: 448px;
 }
 
 /* Typography */
 .game-title {
-    font-size: 3rem;
-    /* text-5xl */
+    font-size: 18px;
     line-height: 1;
     font-weight: 700;
-    /* font-bold */
-    margin-bottom: 0.5rem;
-    /* mb-2 */
-    color: #22d3ee;
-    /* cyan-400 */
+    margin-bottom: 8px;
+    color: #66FCF1;
+    font-family: 'Roboto', sans-serif;
 }
 
 .game-subtitle {
-    font-size: 1.125rem;
-    /* text-lg */
+    font-size: 14px;
     line-height: 1.75rem;
-    color: #9ca3af;
-    /* gray-400 */
-    margin-bottom: 2rem;
-    /* mb-8 */
+    color: #C5C6C7;
+    margin-bottom: 32px;
+    font-family: 'Roboto', sans-serif;
 }
 
 /* Score Display */
 .score-container {
-    margin-bottom: 2rem;
-    /* mb-8 */
+    margin-bottom: 32px;
 }
 
 .score-label {
-    font-size: 1.5rem;
-    /* text-2xl */
+    font-size: 16px;
     line-height: 2rem;
-    margin-bottom: 0.5rem;
-    /* mb-2 */
+    margin-bottom: 8px;
+    font-family: 'Roboto', sans-serif;
 }
 
 .score-value {
-    font-size: 4.5rem;
-    /* text-7xl */
+    font-size: 20px;
     line-height: 1;
     font-weight: 700;
-    /* font-bold */
-    color: #facc15;
-    /* yellow-400 */
+    color: #FFFFFF;
+    font-family: 'Roboto Mono', monospace;
 }
 
 /* Click Button */
 .click-button {
     width: 100%;
-    background-color: #06b6d4;
-    /* bg-cyan-500 */
+    background-color: #45A29E;
     color: white;
     font-weight: 700;
-    /* font-bold */
-    padding: 1rem 2rem;
-    /* py-4 px-8 */
+    padding: 16px 32px;
+    border-radius: 4px;
+    font-size: 16px;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.2s ease, background-color 0.2s ease;
+    font-family: 'Roboto', sans-serif;
+}
+
+.click-button:hover {
+    background-color: #66FCF1;
+    transform: scale(1.05);
+}
+
+.click-button:focus {
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(103, 232, 249, 0.5);
+}
+
+.storage-container {
+    margin-top: 32px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
+.email-input {
+    width: 100%;
+    padding: 12px;
+    border-radius: 4px;
+    border: 1px solid #45A29E;
+    background-color: #1F2833;
+    color: #C5C6C7;
+    font-size: 14px;
+    font-family: 'Roboto', sans-serif;
+}
+
+.storage-buttons {
+    display: flex;
+    gap: 16px;
+}
+
+.storage-button {
+    flex-grow: 1;
+    background-color: #45A29E;
+    color: white;
+    font-weight: 600;
+    padding: 12px 24px;
+    border-radius: 4px;
+    font-size: 14px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    font-family: 'Roboto', sans-serif;
+}
+
+.storage-button:hover {
+    background-color: #66FCF1;
+}
+
+.message {
+    margin-top: 16px;
+    color: #7CFC00;
+    font-family: 'Roboto', sans-serif;
+}
+
+.upgrade-card {
+    text-align: center;
+    padding: 1rem;
+    background-color: #1F2833;
     border-radius: 0.5rem;
-    /* rounded-lg */
-    font-size: 1.5rem;
-    /* text-2xl */
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    width: 100%;
+    max-width: 20rem;
+    margin-bottom: 1rem;
+}
+
+.upgrade-button {
+    width: 100%;
+    background-color: #45A29E;
+    color: white;
+    font-weight: 700;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    font-size: 1rem;
     border: none;
     cursor: pointer;
     transition: transform 0.2s ease, background-color 0.2s ease;
 }
 
-.click-button:hover {
-    background-color: #0891b2;
-    /* hover:bg-cyan-600 */
+.upgrade-button:hover {
+    background-color: #66FCF1;
     transform: scale(1.05);
-    /* hover:scale-105 */
 }
 
-.click-button:focus {
-    outline: none;
-    /* focus:outline-none */
-    box-shadow: 0 0 0 4px rgba(103, 232, 249, 0.5);
-    /* focus:ring-4 focus:ring-cyan-300 */
-}
-
-.storage-container {
-    margin-top: 2rem;
+.upgrades-container {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 1rem;
-}
-
-.email-input {
-    width: 100%;
-    padding: 0.75rem;
-    border-radius: 0.375rem;
-    border: 1px solid #4b5563; /* gray-600 */
-    background-color: #374151; /* gray-700 */
-    color: white;
-    font-size: 1rem;
-}
-
-.storage-buttons {
-    display: flex;
-    gap: 1rem;
-}
-
-.storage-button {
-    flex-grow: 1;
-    background-color: #4b5563; /* gray-600 */
-    color: white;
-    font-weight: 600;
-    padding: 0.75rem 1.5rem;
-    border-radius: 0.375rem;
-    font-size: 1rem;
-    border: none;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-}
-
-.storage-button:hover {
-    background-color: #6b7280; /* gray-500 */
-}
-
-.message {
-    margin-top: 1rem;
-    color: #facc15; /* yellow-400 */
+    margin-bottom: 1rem;
 }
