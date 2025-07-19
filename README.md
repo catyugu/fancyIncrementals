@@ -1,6 +1,6 @@
 # **Fancy Incrementals - A Full-Stack Cloudflare Application**
 
-This document provides a guide on how to set up, develop, and deploy this full-stack serverless application using Cloudflare Pages for the frontend, Cloudflare Workers for the backend API, and potentially Cloudflare D1 for the database in the future.
+This document provides a guide on how to set up, develop, and deploy this full-stack serverless application using Cloudflare Pages for the frontend, Cloudflare Workers for the backend API, and Cloudflare R2 for object storage.
 
 ## **1\. Project Overview**
 
@@ -8,9 +8,17 @@ This project is a platform for hosting and playing incremental games.
 
 *   **Frontend:** A React application built with Vite, hosted on Cloudflare Pages. It serves as the main hub for discovering and playing games.
 *   **Backend:** A serverless API built with Cloudflare Workers. It will handle game-specific logic and data persistence.
-*   **Database:** While not fully implemented, the project is set up to potentially use Cloudflare D1 for storing game state and user progress.
+*   **Storage:** Cloudflare R2 is used for storing game saves.
 
-## **2\. Prerequisites**
+## **2\. Features**
+
+*   **React Frontend:** A modern, responsive frontend built with React and Vite.
+*   **Serverless Backend:** A scalable, serverless backend using Cloudflare Workers.
+*   **Game Platform:** A platform for hosting and playing incremental games.
+*   **Cloudflare Integration:** Fully integrated with Cloudflare for deployment, hosting, and storage.
+*   **Code Quality:** ESLint is configured to ensure code quality and consistency.
+
+## **3\. Prerequisites**
 
 Before you begin, ensure you have the following installed and configured:
 
@@ -22,7 +30,7 @@ Before you begin, ensure you have the following installed and configured:
 *   **A Cloudflare Account:** You will need a free Cloudflare account to deploy your application.
 *   **Git:** For version control.
 
-## **3\. Initial Project Setup**
+## **4\. Initial Project Setup**
 
 1.  **Clone the Repository:**
     ```bash
@@ -34,7 +42,7 @@ Before you begin, ensure you have the following installed and configured:
     npm install
     ```
 
-## **4\. Local Development**
+## **5\. Local Development**
 
 To run and test your entire application on your local machine:
 
@@ -46,7 +54,7 @@ To run and test your entire application on your local machine:
 
 2.  **View in Browser:** Open `http://localhost:5173` in your web browser to interact with the React frontend.
 
-## **5\. Project Structure Explained**
+## **6\. Project Structure Explained**
 
 *   `src/`: Contains all the frontend React application code.
     *   `App.jsx`: The main application component that handles routing.
@@ -56,12 +64,21 @@ To run and test your entire application on your local machine:
 *   `worker/`: Contains the backend serverless API code.
     *   `src/index.js`: The entry point for all API requests. This is where API routing and logic begins.
     *   `src/games/`: Contains the backend logic for each game, separated into its own module.
-*   `wrangler.jsonc`: The main configuration file for Cloudflare. It defines your project name, entry points, and bindings to services like D1.
+*   `wrangler.jsonc`: The main configuration file for Cloudflare. It defines your project name, entry points, and bindings to services like R2.
 *   `package.json`: Defines project scripts (like `dev`, `deploy`) and dependencies.
 *   `vite.config.js`: Configuration file for Vite, the frontend build tool.
 *   `eslint.config.js`: Configuration for ESLint, the code linter.
+*   `styling_regulations.md`: A document that outlines the styling regulations for the project.
 
-## **6\. Deployment**
+## **7. Code Quality**
+
+To ensure code quality, this project uses ESLint. You can run the linter with the following command:
+
+```bash
+npm run lint
+```
+
+## **8\. Deployment**
 
 Deploying your application to the internet is a single step.
 
@@ -77,3 +94,19 @@ Deploying your application to the internet is a single step.
     *   Link everything together.
 
 3.  **Access Your Site:** Once complete, wrangler will provide you with the public URL for your live application (e.g., `https://fancy-incrementals.pages.dev`).
+
+## **9. Contributing**
+
+Contributions are welcome! Please follow these steps to contribute:
+
+1.  Fork the repository.
+2.  Create a new branch (`git checkout -b feature/your-feature`).
+3.  Make your changes.
+4.  Run the linter (`npm run lint`).
+5.  Commit your changes (`git commit -m 'Add some feature'`).
+6.  Push to the branch (`git push origin feature/your-feature`).
+7.  Open a pull request.
+
+## **10. License**
+
+This project is licensed under the MIT License. See the `LICENSE` file for details.
