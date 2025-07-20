@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 -   Reworked the initial `TestGame` into the more feature-rich "Cosmic Forge".
 -   Updated `README.md` to reflect the new game and its features.
+-   Updated the cloud save functionality to be more secure and sound.
 
 ## [0.1.0] - 2025-07-20
 

@@ -1,3 +1,11 @@
+.home-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #111827; /* gray-900 */
+}
+
 .home-card {
     text-align: center;
     padding: 2rem;
