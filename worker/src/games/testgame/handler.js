@@ -10,12 +10,13 @@ export async function saveGame(request, env) {
             throw new Error("SAVE_SECRET is not defined in the worker environment.");
         }
 
-        const { email, score, clickPower, autoClickers, tier } = await request.json();
+        const { email, energy, stardust, generators, upgrades } = await request.json();
         if (!email) {
             return newResponse({ error: 'Email is required' }, 400);
         }
 
-        const gameStateString = JSON.stringify({ score, clickPower, autoClickers, tier });
+        const gameState = { energy, stardust, generators, upgrades };
+        const gameStateString = JSON.stringify(gameState);
         const hash = await generateHash(gameStateString, SAVE_SECRET);
 
         const saveData = {
@@ -41,8 +42,7 @@ export async function loadGame(request, env) {
             throw new Error("SAVE_SECRET is not defined in the worker environment.");
         }
 
-        const url = new URL(request.url);
-        const email = url.searchParams.get('email');
+        const { email } = await request.json();
         if (!email) {
             return newResponse({ error: 'Email is required' }, 400);
         }
@@ -53,14 +53,13 @@ export async function loadGame(request, env) {
         }
 
         const { gameState, hash } = JSON.parse(await saveData.text());
-        const { score, clickPower, autoClickers, tier } = JSON.parse(gameState);
         const expectedHash = await generateHash(gameState, SAVE_SECRET);
 
         if (hash !== expectedHash) {
             return newResponse({ error: 'Save data has been tampered with!' }, 400);
         }
 
-        return newResponse({ score, clickPower, autoClickers, tier });
+        return newResponse(JSON.parse(gameState));
 
     } catch (e) {
         // Log the error for debugging.

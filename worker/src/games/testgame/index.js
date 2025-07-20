@@ -4,6 +4,6 @@ import { saveGame, loadGame } from './handler';
 const testGameRouter = Router({ base: '/api/testgame' });
 
 testGameRouter.post('/save', saveGame);
-testGameRouter.get('/load', loadGame);
+testGameRouter.post('/load', loadGame);
 
 export default testGameRouter;
