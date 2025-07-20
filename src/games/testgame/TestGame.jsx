@@ -157,12 +157,30 @@ export default function TestGame() {
     const stardustToGain = Math.floor(Math.cbrt(energy / 1e6));
     const canAscend = energy >= 1e6;
 
+    const lastUpdateTime = React.useRef(Date.now());
+
     // --- Game Loop ---
     useEffect(() => {
-        const gameLoop = setInterval(() => {
-            setState(prev => ({ ...prev, energy: prev.energy + energyPerSecond / 10 }));
-        }, 100);
-        return () => clearInterval(gameLoop);
+        let animationFrameId;
+
+        const gameLoop = () => {
+            const now = Date.now();
+            const deltaTime = (now - lastUpdateTime.current) / 1000; // Time in seconds
+            lastUpdateTime.current = now;
+
+            if (deltaTime > 0) {
+                setState(prev => ({
+                    ...prev,
+                    energy: prev.energy + energyPerSecond * deltaTime
+                }));
+            }
+
+            animationFrameId = requestAnimationFrame(gameLoop);
+        };
+
+        animationFrameId = requestAnimationFrame(gameLoop);
+
+        return () => cancelAnimationFrame(animationFrameId);
     }, [energyPerSecond]);
 
     // --- Persistence ---
