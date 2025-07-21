@@ -11,6 +11,7 @@
 		"deploy": "npm run build && wrangler deploy"
 	},
 	"dependencies": {
+		"break_infinity.js": "^2.2.0",
 		"itty-router": "^4.0.23",
 		"react": "^19.1.0",
 		"react-dom": "^19.1.0",

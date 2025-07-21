@@ -4,26 +4,34 @@ This document provides guidance for the Gemini AI assistant to effectively contr
 
 ## **1. Project Overview**
 
-Fancy Incrementals is a full-stack serverless application for hosting and playing incremental games, built with React, Cloudflare Workers, and Cloudflare R2.
+Fancy Incrementals is a full-stack serverless application for hosting and playing incremental games.
 
-## **2. Development Philosophy**
+## **2. Key Technologies**
 
-*   **Modularity:** Each game should be a self-contained module, with its own frontend and backend components. This makes it easier to develop, test, and deploy individual games.
-*   **Simplicity:** Keep the core platform simple and lightweight. Avoid adding unnecessary complexity to the main application.
-*   **Scalability:** The backend should be designed to handle a large number of concurrent players and games.
+* **Frontend:** React (JavaScript/JSX) for building interactive user interfaces.
+* **Backend:** Cloudflare Workers (JavaScript) for serverless API endpoints and logic.
+* **Storage:** Cloudflare R2 for object storage, primarily used for game saves.
+* **Build Tool:** Vite for fast development and optimized builds.
+* **Deployment:** Cloudflare Pages for frontend hosting and Cloudflare Workers for backend deployment.
 
-## **3. Conventions**
+## **3. Development Philosophy**
 
-*   **Styling:** All styling must adhere to the rules outlined in `styling_regulations.md`.
-*   **File Structure:** Follow the existing file structure. New games should be added to the `src/games` and `worker/src/games` directories.
-*   **Component Naming:** React components should be named in PascalCase (e.g., `MyComponent`).
-*   **API Endpoints:** API endpoints for games should be prefixed with `/api/games/:gameName`.
-*   **Commits:** Follow the conventional commit format (e.g., `feat: add new game`, `fix: resolve issue with game state`).
+* **Modularity:** Each game should be a self-contained module, with its own frontend and backend components. This makes it easier to develop, test, and deploy individual games.
+* **Simplicity:** Keep the core platform simple and lightweight. Avoid adding unnecessary complexity to the main application.
+* **Scalability:** The backend should be designed to handle a large number of concurrent players and games.
 
-## **4. Goals for the AI Assistant**
+## **4. Conventions**
 
-*   **Game Development:** Assist in creating new incremental games, including frontend components and backend logic.
-*   **Feature Enhancement:** Help add new features to the platform, such as user accounts, leaderboards, and social sharing.
-*   **Bug Fixes:** Identify and fix bugs in the codebase.
-*   **Code Quality:** Ensure that all new code adheres to the project's conventions and quality standards.
-*   **Deployment:** Assist with the deployment of the application to Cloudflare.
+* **Styling:** All styling must adhere to the rules outlined in `styling_regulations.md`.
+* **File Structure:** Follow the existing file structure. New games should be added to the `src/games` (frontend) and `worker/src/games` (backend) directories.
+* **Component Naming:** React components should be named in PascalCase (e.g., `MyComponent`).
+* **API Endpoints:** API endpoints for games should be prefixed with `/api/games/:gameName`. The Cloudflare Worker handles routes under `/api/*`.
+* **Commits:** Follow the conventional commit format (e.g., `feat: add new game`, `fix: resolve issue with game state`).
+* **Documentation:** All new features and changes should be documented in the `CHANGELOG.md` . And the overall introductions should be in `README.md`.
+
+## **5. Goals for the AI Assistant**
+
+* **Game Development:** Assist in creating new incremental games, including frontend components (React) and backend logic (Cloudflare Workers).
+* **Feature Enhancement:** Help add new features to the platform, such as user accounts, leaderboards, and social sharing, ensuring they integrate with Cloudflare Workers and R2.
+* **Bug Fixes:** Identify and fix bugs in both frontend and backend code.
+* **Code Quality:** Ensure that all new code adheres to the project's conventions and quality standards, including proper React practices and Cloudflare Worker best practices.
