@@ -27,16 +27,9 @@ Fancy Incrementals is a full-stack serverless application for hosting and playin
 * **Component Naming:** React components should be named in PascalCase (e.g., `MyComponent`).
 * **API Endpoints:** API endpoints for games should be prefixed with `/api/games/:gameName`. The Cloudflare Worker handles routes under `/api/*`.
 * **Commits:** Follow the conventional commit format (e.g., `feat: add new game`, `fix: resolve issue with game state`).
+* **Documentation:** All new features and changes should be documented in the `CHANGELOG.md` . And the overall introductions should be in `README.md`.
 
-## **5. Development Workflow**
-
-* **Install Dependencies:** `npm install`
-* **Start Development Server:** `npm run dev` (starts both frontend and a local Cloudflare Worker).
-* **Build Project:** `npm run build` (builds frontend assets to `./dist`).
-* **Deploy:** `npm run deploy` (deploys the Cloudflare Worker and frontend assets).
-* **Testing:** `npm test` (if tests are implemented, otherwise refer to specific game directories for testing instructions).
-
-## **6. Goals for the AI Assistant**
+## **5. Goals for the AI Assistant**
 
 * **Game Development:** Assist in creating new incremental games, including frontend components (React) and backend logic (Cloudflare Workers).
 * **Feature Enhancement:** Help add new features to the platform, such as user accounts, leaderboards, and social sharing, ensuring they integrate with Cloudflare Workers and R2.
