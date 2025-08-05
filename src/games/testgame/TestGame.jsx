@@ -1,13 +1,40 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import './TestGame.css';
 import Decimal from 'break_infinity.js';
+import { 
+    GAME_CONFIG, 
+    GENERATORS_CONFIG, 
+    UPGRADES_CONFIG, 
+    STARDUST_UPGRADES_CONFIG
+} from './gameConfig.js';
 
 // --- Helper Functions ---
 const formatNumber = (num) => {
     if (!(num instanceof Decimal)) {
         num = new Decimal(num);
     }
+    
+    // 避免使用isNaN和isFinite方法，改用更安全的方式检查
+    const numStr = num.toString();
+    if (numStr === "NaN" || numStr === "Infinity") {
+        return "超出范围";
+    }
+    
+    // 小数值简单显示
     if (num.lt(1000)) return num.toFixed(2);
+    
+    // 非常大的数使用科学计数法
+    if (num.gte(new Decimal('1e21'))) {
+        // 获取指数部分并分段显示
+        const exp = num.e;
+        if (exp >= 308) { // 接近JS Number类型的极限
+            // 使用自定义格式避免JS Number溢出
+            const mantissa = num.mantissa.toFixed(2);
+            return `${mantissa}e${exp}`;
+        }
+    }
+    
+    // 一般大数使用标准科学计数法
     return num.toExponential(2);
 };
 
@@ -49,17 +76,76 @@ const BuyAmountController = ({ buyAmount, setBuyAmount }) => {
     );
 };
 
-const ResourceDisplay = ({ energy, energyPerSecond, stardust }) => (
+
+
+const PrestigePanel = ({ prestige, onPrestige, nextPrestigeGain, canPrestige }) => (
+    <div className="prestige-section">
+        <h3>Prestige System</h3>
+        <div className="prestige-stats">
+            <div className="prestige-stat">
+                <span className="prestige-label">Prestige Level:</span>
+                <span className="prestige-value">{formatNumber(prestige.level)}</span>
+            </div>
+            <div className="prestige-stat">
+                <span className="prestige-label">Prestige Points:</span>
+                <span className="prestige-value">{formatNumber(prestige.points)}</span>
+            </div>
+            <div className="prestige-stat">
+                <span className="prestige-label">Prestige Multiplier:</span>
+                <span className="prestige-value">x{formatNumber(prestige.multiplier)}</span>
+            </div>
+        </div>
+        <div className="prestige-next">
+            <p>Next Prestige will give you: <span className="text-accent">{formatNumber(nextPrestigeGain)}</span> Prestige Points</p>
+            <p>Requirement: {formatNumber(new Decimal(10).pow(prestige.level.plus(1).times(10)))} Stardust</p>
+            <button 
+                className="prestige-button" 
+                onClick={onPrestige} 
+                disabled={!canPrestige}
+            >
+                Prestige Reset
+            </button>
+        </div>
+    </div>
+);
+
+
+
+const ResourceDisplay = ({ energy, energyPerSecond, stardust, quantumEnergy, darkMatter, prestigePoints }) => (
     <div className="resource-display-panel">
-        <div className="resource">
-            <span className="resource-label">Stardust</span>
-            <span className="resource-value">{formatNumber(stardust)}</span>
+        <div className="resource-row">
+            <div className="resource">
+                <span className="resource-label">Energy</span>
+                <span className="resource-value">{formatNumber(energy)}</span>
+                <span className="resource-rate">+{formatNumber(energyPerSecond)}/s</span>
+            </div>
+            <div className="resource">
+                <span className="resource-label">Stardust</span>
+                <span className="resource-value">{formatNumber(stardust)}</span>
+            </div>
         </div>
-        <div className="resource">
-            <span className="resource-label">Energy</span>
-            <span className="resource-value">{formatNumber(energy)}</span>
-            <span className="resource-rate">+{formatNumber(energyPerSecond)}/s</span>
-        </div>
+        {quantumEnergy.gt(0) && (
+            <div className="resource-row">
+                <div className="resource">
+                    <span className="resource-label">Quantum Energy</span>
+                    <span className="resource-value">{formatNumber(quantumEnergy)}</span>
+                </div>
+                {darkMatter.gt(0) && (
+                    <div className="resource">
+                        <span className="resource-label">Dark Matter</span>
+                        <span className="resource-value">{formatNumber(darkMatter)}</span>
+                    </div>
+                )}
+            </div>
+        )}
+        {prestigePoints.gt(0) && (
+            <div className="resource-row">
+                <div className="resource">
+                    <span className="resource-label">Prestige Points</span>
+                    <span className="resource-value">{formatNumber(prestigePoints)}</span>
+                </div>
+            </div>
+        )}
     </div>
 );
 
@@ -132,34 +218,41 @@ const CloudStorage = ({ email, setEmail, onSave, onLoad, loading, error, message
 
 
 // --- Main Game Component ---
-const initialGenerators = [
-    { id: 'h_cloud', name: 'Hydrogen Cloud', owned: new Decimal(0), baseCost: new Decimal(10), cost: new Decimal(10), baseEnergy: new Decimal(0.1), type: 'generator' },
-    { id: 's_nursery', name: 'Stellar Nursery', owned: new Decimal(0), baseCost: new Decimal(150), cost: new Decimal(150), baseEnergy: new Decimal(1), type: 'generator' },
-    { id: 'g_cluster', name: 'Galaxy Cluster', owned: new Decimal(0), baseCost: new Decimal(2500), cost: new Decimal(2500), baseEnergy: new Decimal(8), type: 'generator' },
-    { id: 'neutron_star', name: 'Neutron Star', owned: new Decimal(0), baseCost: new Decimal(40000), cost: new Decimal(40000), baseEnergy: new Decimal(50), type: 'generator' },
-    { id: 'black_hole', name: 'Black Hole', owned: new Decimal(0), baseCost: new Decimal(750000), cost: new Decimal(750000), baseEnergy: new Decimal(250), type: 'generator' },
-];
-
-const initialUpgrades = [
-    { id: 'energy_boost_1', name: 'Cosmic Rays', owned: new Decimal(0), baseCost: new Decimal(500), cost: new Decimal(500), description: 'Multiplies Energy generation by 1.2x per level.', baseMultiplier: 1.2, type: 'global' },
-    { id: 'h_cloud_boost_1', name: 'Focused Solar Winds', owned: new Decimal(0), baseCost: new Decimal(1000), cost: new Decimal(1000), description: 'Doubles Hydrogen Cloud output per level.', baseMultiplier: 2, target: 'h_cloud', type: 'upgrade' },
-    { id: 's_nursery_boost_1', name: 'Gravitational Collapse', owned: new Decimal(0), baseCost: new Decimal(8000), cost: new Decimal(8000), description: 'Doubles Stellar Nursery output per level.', baseMultiplier: 2, target: 's_nursery', type: 'upgrade' },
-    { id: 'g_cluster_boost_1', name: 'Galactic Filaments', owned: new Decimal(0), baseCost: new Decimal(50000), cost: new Decimal(50000), description: 'Multiplies Galaxy Cluster output by 1.5x per level.', baseMultiplier: 1.5, target: 'g_cluster', type: 'upgrade' },
-    { id: 'energy_boost_2', name: 'Zero-Point Energy', owned: new Decimal(0), baseCost: new Decimal(200000), cost: new Decimal(200000), description: 'Multiplies Energy generation by 1.2x per level.', baseMultiplier: 1.2, type: 'global' },
-];
-
-const initialStardustUpgrades = [
-    { id: 'stardust_boost_1', name: 'Stardust Amplifier', owned: new Decimal(0), baseCost: new Decimal(1), cost: new Decimal(1), description: 'Stardust is 10% more effective.', baseMultiplier: 1.1, type: 'stardust' },
-    { id: 'energy_from_stardust_1', name: 'Stardust Infusion', owned: new Decimal(0), baseCost: new Decimal(5), cost: new Decimal(5), description: 'Gain a multiplier to energy based on stardust.', baseMultiplier: 1.5, type: 'stardust' },
-    { id: 'generator_cost_reduction_1', name: 'Cosmic Discount', owned: new Decimal(0), baseCost: new Decimal(20), cost: new Decimal(20), description: 'Reduces the cost scaling of generators.', baseMultiplier: 0.99, type: 'stardust' },
-];
-
 const getInitialState = () => ({
-    energy: new Decimal(10),
-    stardust: new Decimal(0),
-    generators: initialGenerators.map(g => ({ ...g, owned: new Decimal(g.owned), cost: new Decimal(g.cost) })),
-    upgrades: initialUpgrades.map(u => ({ ...u, owned: new Decimal(u.owned), cost: new Decimal(u.cost) })),
-    stardustUpgrades: initialStardustUpgrades.map(u => ({ ...u, owned: new Decimal(u.owned), cost: new Decimal(u.cost) })),
+    energy: GAME_CONFIG.STARTING_ENERGY,
+    stardust: GAME_CONFIG.STARTING_STARDUST,
+    quantumEnergy: GAME_CONFIG.STARTING_QUANTUM_ENERGY,
+    darkMatter: GAME_CONFIG.STARTING_DARK_MATTER,
+    currentEnergyPerSecond: new Decimal(0), // 添加当前每秒能量计数器
+    generators: GENERATORS_CONFIG.map(g => ({ 
+        ...g, 
+        owned: new Decimal(0), 
+        cost: new Decimal(g.baseCost),
+        type: 'generator' 
+    })),
+    upgrades: UPGRADES_CONFIG.map(u => ({ 
+        ...u, 
+        owned: new Decimal(0), 
+        cost: new Decimal(u.baseCost) 
+    })),
+    stardustUpgrades: STARDUST_UPGRADES_CONFIG.map(u => ({ 
+        ...u, 
+        owned: new Decimal(0), 
+        cost: new Decimal(u.baseCost) 
+    })),
+    prestige: {
+        level: new Decimal(0),
+        points: new Decimal(0),
+        multiplier: new Decimal(1),
+    },
+    statistics: {
+        totalEnergyGenerated: new Decimal(0),
+        totalAscensions: new Decimal(0),
+        totalTimePlayedSeconds: 0,
+        startTime: Date.now(),
+        maxEnergyReached: GAME_CONFIG.STARTING_ENERGY,
+        maxStardustReached: GAME_CONFIG.STARTING_STARDUST,
+    },
 });
 
 export default function TestGame() {
@@ -170,8 +263,10 @@ export default function TestGame() {
     const [buyAmount, setBuyAmount] = useState(1);
 
     const [gameState, setGameState] = useState(getInitialState());
-    const { energy, stardust, generators, upgrades, stardustUpgrades } = gameState;
+    const { energy, stardust, quantumEnergy, darkMatter, generators, upgrades, stardustUpgrades, prestige, statistics } = gameState;
     const [activeTab, setActiveTab] = useState('Generators');
+
+
 
     const setState = (merger) => {
         setGameState(prev => {
@@ -182,42 +277,238 @@ export default function TestGame() {
         });
     };
 
-    const stardustBoost1 = stardustUpgrades.find(u => u.id === 'stardust_boost_1');
-    const stardustMultiplier = Decimal.pow(1.1, stardust).times(stardustBoost1 ? Decimal.pow(stardustBoost1.baseMultiplier, stardustBoost1.owned) : 1);
+    // Enhanced calculation functions
+    const getStardustMultiplier = () => {
+        const stardustBoost1 = stardustUpgrades.find(u => u.id === 'stardust_boost_1');
+        
+        // 使用对数方法计算大数的幂，避免溢出
+        let baseStardustEffect;
+        if (stardust.gt(1e50)) {
+            // 对于非常大的星尘值，使用对数计算
+            const logBase = Math.log(GAME_CONFIG.STARDUST_EFFECT_BASE);
+            const logResult = stardust.times(logBase);
+            // 限制最大值，防止溢出
+            const cappedLog = Decimal.min(logResult, 700); // 限制最大指数约为e700
+            baseStardustEffect = Decimal.exp(cappedLog);
+        } else {
+            // 对于较小的值，使用正常计算
+            baseStardustEffect = Decimal.pow(GAME_CONFIG.STARDUST_EFFECT_BASE, stardust);
+        }
+        
+        const amplifierEffect = stardustBoost1 ? Decimal.pow(stardustBoost1.baseMultiplier, stardustBoost1.owned) : new Decimal(1);
+        
+        // 安全检查结果
+        const result = baseStardustEffect.times(amplifierEffect).times(prestige.multiplier);
+        
+        // 确保结果是一个有效的数值
+        if (result.toString() === "NaN" || result.toString() === "Infinity") {
+            return new Decimal(1e300); // 返回一个非常大但安全的数值
+        }
+        
+        return result;
+    };
 
-    const energyFromStardust1 = stardustUpgrades.find(u => u.id === 'energy_from_stardust_1');
-    const energyFromStardustMultiplier = energyFromStardust1 ? Decimal.pow(energyFromStardust1.baseMultiplier, energyFromStardust1.owned) : 1;
+    const getEnergyFromStardustMultiplier = () => {
+        const energyFromStardust1 = stardustUpgrades.find(u => u.id === 'energy_from_stardust_1');
+        if (!energyFromStardust1 || energyFromStardust1.owned.eq(0)) return new Decimal(1);
+        
+        // 对于非常大的星尘值，使用对数计算，并设置上限
+        const logValue = stardust.plus(1).log10().plus(1);
+        
+        // 限制底数，防止结果过大
+        const cappedLogValue = Decimal.min(logValue, new Decimal(500));
+        
+        const result = Decimal.pow(cappedLogValue, energyFromStardust1.owned.times(0.5));
+        
+        // 确保结果是有效的
+        if (result.toString() === "NaN" || result.toString() === "Infinity") {
+            return new Decimal(1e150); // 返回一个大但安全的数值
+        }
+        
+        return result;
+    };
 
-    const totalUpgradeMultiplier = upgrades
-        .filter(u => u.type === 'global')
-        .reduce((acc, u) => acc.times(Decimal.pow(u.baseMultiplier, u.owned)), new Decimal(1));
+    const getTotalUpgradeMultiplier = () => {
+        return upgrades
+            .filter(u => u.type === 'global')
+            .reduce((acc, u) => acc.times(Decimal.pow(u.baseMultiplier, u.owned)), new Decimal(1));
+    };
+
+    const getSynergyMultiplier = () => {
+        const synergyUpgrade = upgrades.find(u => u.type === 'synergy');
+        if (!synergyUpgrade || synergyUpgrade.owned.eq(0)) return new Decimal(1);
+        
+        let synergyMultiplier = new Decimal(1);
+        generators.forEach((gen, index) => {
+            if (index > 0) {
+                const previousGenCount = generators[index - 1].owned;
+                synergyMultiplier = synergyMultiplier.times(
+                    Decimal.pow(synergyUpgrade.baseMultiplier, previousGenCount.times(synergyUpgrade.owned))
+                );
+            }
+        });
+        return synergyMultiplier;
+    };
+
+    const getEfficiencyMultiplier = () => {
+        const efficiencyUpgrade = upgrades.find(u => u.type === 'efficiency');
+        return efficiencyUpgrade ? Decimal.pow(efficiencyUpgrade.baseMultiplier, efficiencyUpgrade.owned) : new Decimal(1);
+    };
+
+    const stardustMultiplier = getStardustMultiplier();
+    const energyFromStardustMultiplier = getEnergyFromStardustMultiplier();
+    const totalUpgradeMultiplier = getTotalUpgradeMultiplier();
+    const synergyMultiplier = getSynergyMultiplier();
+    const efficiencyMultiplier = getEfficiencyMultiplier();
 
     const energyPerSecond = generators.reduce((total, gen) => {
         const genUpgrade = upgrades.find(u => u.target === gen.id);
         const genMultiplier = genUpgrade ? Decimal.pow(genUpgrade.baseMultiplier, genUpgrade.owned) : new Decimal(1);
         return total.plus(gen.owned.times(gen.baseEnergy).times(genMultiplier));
-    }, new Decimal(0)).times(totalUpgradeMultiplier).times(stardustMultiplier).times(energyFromStardustMultiplier);
+    }, new Decimal(0))
+        .times(totalUpgradeMultiplier)
+        .times(stardustMultiplier)
+        .times(energyFromStardustMultiplier)
+        .times(synergyMultiplier)
+        .times(efficiencyMultiplier);
 
-    const energyPerClick = new Decimal(1).times(totalUpgradeMultiplier).times(stardustMultiplier).times(energyFromStardustMultiplier);
+    const energyPerClick = new Decimal(1)
+        .times(totalUpgradeMultiplier)
+        .times(stardustMultiplier)
+        .times(energyFromStardustMultiplier);
 
-    const stardustToGain = Decimal.floor(Decimal.pow(energy.div(1e6), 0.4));
-    const canAscend = energy.gte(1e6);
+    const stardustToGain = Decimal.floor(Decimal.pow(energy.div(GAME_CONFIG.ASCENSION_REQUIREMENT), GAME_CONFIG.ASCENSION_EXPONENT));
+    const canAscend = energy.gte(GAME_CONFIG.ASCENSION_REQUIREMENT);
+
+    // Prestige calculations
+    const prestigeRequirement = GAME_CONFIG.PRESTIGE_BASE_REQUIREMENT.pow(prestige.level.plus(1).times(GAME_CONFIG.PRESTIGE_REQUIREMENT_SCALING));
+    const canPrestige = stardust.gte(prestigeRequirement);
+    const nextPrestigeGain = prestige.level.plus(1).times(GAME_CONFIG.PRESTIGE_POINTS_PER_LEVEL);
 
     const lastUpdateTime = React.useRef(Date.now());
 
     useEffect(() => {
         let animationFrameId;
+        let lastUpdateTimestamp = Date.now();
+        let frameCount = 0;
+        let lastCalculatedEPS = energyPerSecond; // 保存最后一次计算的能量每秒值
 
+        // 每帧更新游戏状态
         const gameLoop = () => {
             const now = Date.now();
             const deltaTime = (now - lastUpdateTime.current) / 1000;
             lastUpdateTime.current = now;
+            frameCount++;
 
             if (deltaTime > 0) {
-                setState(prev => ({
-                    ...prev,
-                    energy: prev.energy.plus(energyPerSecond.times(deltaTime))
-                }));
+                setGameState(prev => {
+                    // 在游戏循环中使用与主组件相同的计算逻辑
+                    const stardustBoost1 = prev.stardustUpgrades.find(u => u.id === 'stardust_boost_1');
+                    
+                    // 使用安全的计算方法处理大数值
+                    let baseStardustEffect;
+                    if (prev.stardust.gt(1e50)) {
+                        // 对于非常大的星尘值，使用对数计算
+                        const logBase = Math.log(GAME_CONFIG.STARDUST_EFFECT_BASE);
+                        const logResult = prev.stardust.times(logBase);
+                        // 限制最大值，防止溢出
+                        const cappedLog = Decimal.min(logResult, 700);
+                        baseStardustEffect = Decimal.exp(cappedLog);
+                    } else {
+                        // 对于较小的值，使用正常计算
+                        baseStardustEffect = Decimal.pow(GAME_CONFIG.STARDUST_EFFECT_BASE, prev.stardust);
+                    }
+                    
+                    const amplifierEffect = stardustBoost1 ? Decimal.pow(stardustBoost1.baseMultiplier, stardustBoost1.owned) : new Decimal(1);
+                    
+                    // 安全检查结果
+                    let currentStardustMultiplier = baseStardustEffect.times(amplifierEffect).times(prev.prestige.multiplier);
+                    
+                    // 确保结果是一个有效的数值
+                    if (currentStardustMultiplier.toString() === "NaN" || currentStardustMultiplier.toString() === "Infinity") {
+                        currentStardustMultiplier = new Decimal(1e300); // 返回一个非常大但安全的数值
+                    }
+
+                    const currentTotalUpgradeMultiplier = prev.upgrades
+                        .filter(u => u.type === 'global')
+                        .reduce((acc, u) => acc.times(Decimal.pow(u.baseMultiplier, u.owned)), new Decimal(1));
+
+                    const stardustEnergyUpgrade = prev.stardustUpgrades.find(u => u.id === 'energy_from_stardust_1');
+                    let currentEnergyFromStardustMultiplier;
+                    
+                    if (stardustEnergyUpgrade && stardustEnergyUpgrade.owned.gt(0)) {
+                        // 对于非常大的星尘值，使用对数计算，并设置上限
+                        const logValue = prev.stardust.plus(1).log10().plus(1);
+                        // 限制底数，防止结果过大
+                        const cappedLogValue = Decimal.min(logValue, new Decimal(500));
+                        
+                        currentEnergyFromStardustMultiplier = Decimal.pow(cappedLogValue, stardustEnergyUpgrade.owned.times(0.5));
+                        
+                        // 确保结果是有效的
+                        if (currentEnergyFromStardustMultiplier.toString() === "NaN" || 
+                            currentEnergyFromStardustMultiplier.toString() === "Infinity") {
+                            currentEnergyFromStardustMultiplier = new Decimal(1e150); // 返回一个大但安全的数值
+                        }
+                    } else {
+                        currentEnergyFromStardustMultiplier = new Decimal(1);
+                    }
+
+                    const synergyUpgrade = prev.upgrades.find(u => u.type === 'synergy');
+                    const currentSynergyMultiplier = (synergyUpgrade && synergyUpgrade.owned.gt(0)) ? 
+                        Decimal.pow(synergyUpgrade.baseMultiplier, prev.generators.reduce((sum, gen) => sum.plus(gen.owned), new Decimal(0))) : new Decimal(1);
+
+                    const efficiencyUpgrade = prev.upgrades.find(u => u.type === 'efficiency');
+                    const currentEfficiencyMultiplier = efficiencyUpgrade ? 
+                        Decimal.pow(efficiencyUpgrade.baseMultiplier, efficiencyUpgrade.owned) : new Decimal(1);
+
+                    // 使用完全相同的计算逻辑
+                    const currentEnergyPerSecond = prev.generators.reduce((total, gen) => {
+                        const genUpgrade = prev.upgrades.find(u => u.target === gen.id);
+                        const genMultiplier = genUpgrade ? Decimal.pow(genUpgrade.baseMultiplier, genUpgrade.owned) : new Decimal(1);
+                        return total.plus(gen.owned.times(gen.baseEnergy).times(genMultiplier));
+                    }, new Decimal(0))
+                        .times(currentTotalUpgradeMultiplier)
+                        .times(currentStardustMultiplier)
+                        .times(currentEnergyFromStardustMultiplier)
+                        .times(currentSynergyMultiplier)
+                        .times(currentEfficiencyMultiplier);
+                    
+                    // 检查计算结果是否有效
+                    const epsStr = currentEnergyPerSecond.toString();
+                    const validEPS = epsStr !== "NaN" && epsStr !== "Infinity" 
+                        ? currentEnergyPerSecond 
+                        : new Decimal(0);
+                    
+                    // 基于实际每秒值计算增量
+                    const newEnergyGain = validEPS.times(deltaTime);
+                    
+                    // 安全地增加能量
+                    let newEnergy;
+                    try {
+                        newEnergy = prev.energy.plus(newEnergyGain);
+                        // 检查结果是否有效
+                        if (newEnergy.toString() === "NaN" || newEnergy.toString() === "Infinity") {
+                            newEnergy = prev.energy; // 保持原值
+                        }
+                    } catch (e) {
+                        // 出错时保持原值
+                        newEnergy = prev.energy;
+                    }
+                    
+                    return {
+                        ...prev,
+                        energy: newEnergy,
+                        // 保存当前每秒能量值，用于显示
+                        currentEnergyPerSecond: validEPS,
+                        statistics: {
+                            ...prev.statistics,
+                            totalEnergyGenerated: prev.statistics.totalEnergyGenerated.plus(newEnergyGain),
+                            totalTimePlayedSeconds: prev.statistics.totalTimePlayedSeconds + deltaTime,
+                            maxEnergyReached: Decimal.max(prev.statistics.maxEnergyReached || new Decimal(0), newEnergy),
+                            maxStardustReached: Decimal.max(prev.statistics.maxStardustReached || new Decimal(0), prev.stardust),
+                        }
+                    };
+                });
             }
 
             animationFrameId = requestAnimationFrame(gameLoop);
@@ -226,14 +517,33 @@ export default function TestGame() {
         animationFrameId = requestAnimationFrame(gameLoop);
 
         return () => cancelAnimationFrame(animationFrameId);
-    }, [energyPerSecond]);
+    }, []);
+
+
+
+
+
+
 
     const createLeanSaveState = (state) => ({
         energy: state.energy.toJSON(),
         stardust: state.stardust.toJSON(),
+        quantumEnergy: state.quantumEnergy.toJSON(),
+        darkMatter: state.darkMatter.toJSON(),
         generators: state.generators.map(g => ({ id: g.id, owned: g.owned.toJSON() })),
         upgrades: state.upgrades.map(u => ({ id: u.id, owned: u.owned.toJSON() })),
         stardustUpgrades: state.stardustUpgrades.map(u => ({ id: u.id, owned: u.owned.toJSON() })),
+        prestige: {
+            level: state.prestige.level.toJSON(),
+            points: state.prestige.points.toJSON(),
+            multiplier: state.prestige.multiplier.toJSON(),
+        },
+        statistics: {
+            totalEnergyGenerated: state.statistics.totalEnergyGenerated.toJSON(),
+            totalAscensions: state.statistics.totalAscensions.toJSON(),
+            totalTimePlayedSeconds: state.statistics.totalTimePlayedSeconds,
+            startTime: state.statistics.startTime,
+        },
         lastActive: Date.now(),
     });
 
@@ -250,8 +560,10 @@ export default function TestGame() {
 
             const mergedState = {
                 ...initialState,
-                energy: loaded.energy ? new Decimal(loaded.energy) : new Decimal(0),
+                energy: loaded.energy ? new Decimal(loaded.energy) : new Decimal(10),
                 stardust: loaded.stardust ? new Decimal(loaded.stardust) : new Decimal(0),
+                quantumEnergy: loaded.quantumEnergy ? new Decimal(loaded.quantumEnergy) : new Decimal(0),
+                darkMatter: loaded.darkMatter ? new Decimal(loaded.darkMatter) : new Decimal(0),
                 generators: initialState.generators.map(g => {
                     const savedGen = loaded.generators?.find(sg => sg.id === g.id);
                     if (!savedGen) return g;
@@ -259,7 +571,7 @@ export default function TestGame() {
                     return {
                         ...g,
                         owned: owned,
-                        cost: g.baseCost.times(Decimal.pow(1.15, owned))
+                        cost: g.baseCost.times(Decimal.pow(GAME_CONFIG.GENERATOR_COST_SCALING, owned))
                     };
                 }),
                 upgrades: initialState.upgrades.map(u => {
@@ -269,7 +581,7 @@ export default function TestGame() {
                     return {
                         ...u,
                         owned: owned,
-                        cost: u.baseCost.times(Decimal.pow(1.4, owned))
+                        cost: u.baseCost.times(Decimal.pow(GAME_CONFIG.UPGRADE_COST_SCALING, owned))
                     };
                 }),
                 stardustUpgrades: initialState.stardustUpgrades.map(u => {
@@ -279,16 +591,32 @@ export default function TestGame() {
                     return {
                         ...u,
                         owned: owned,
-                        cost: u.baseCost.times(Decimal.pow(2, owned))
+                        cost: u.baseCost.times(Decimal.pow(GAME_CONFIG.STARDUST_UPGRADE_COST_SCALING, owned))
                     };
                 }),
+                prestige: {
+                    level: loaded.prestige?.level ? new Decimal(loaded.prestige.level) : new Decimal(0),
+                    points: loaded.prestige?.points ? new Decimal(loaded.prestige.points) : new Decimal(0),
+                    multiplier: loaded.prestige?.multiplier ? new Decimal(loaded.prestige.multiplier) : new Decimal(1),
+                },
+                statistics: {
+                    totalEnergyGenerated: loaded.statistics?.totalEnergyGenerated ? new Decimal(loaded.statistics.totalEnergyGenerated) : new Decimal(0),
+                    totalAscensions: loaded.statistics?.totalAscensions ? new Decimal(loaded.statistics.totalAscensions) : new Decimal(0),
+                    totalTimePlayedSeconds: loaded.statistics?.totalTimePlayedSeconds || 0,
+                    startTime: loaded.statistics?.startTime || Date.now(),
+                    maxEnergyReached: loaded.statistics?.maxEnergyReached ? new Decimal(loaded.statistics.maxEnergyReached) : new Decimal(0),
+                    maxStardustReached: loaded.statistics?.maxStardustReached ? new Decimal(loaded.statistics.maxStardustReached) : new Decimal(0),
+                },
             };
 
             const lastActive = loaded.lastActive || Date.now();
             const offlineTime = (Date.now() - lastActive) / 1000;
 
-            if (offlineTime > 0) {
-                const loadedStardustMultiplier = Decimal.pow(1.1, mergedState.stardust);
+            if (offlineTime > 0 && offlineTime < 86400) { // Max 24 hours offline time
+                const offlineBoost = mergedState.stardustUpgrades.find(u => u.id === 'offline_boost_1');
+                const offlineMultiplier = offlineBoost ? Decimal.pow(offlineBoost.baseMultiplier, offlineBoost.owned) : new Decimal(1);
+                
+                const loadedStardustMultiplier = Decimal.pow(GAME_CONFIG.STARDUST_BASE_MULTIPLIER, mergedState.stardust);
                 const loadedGlobalMultiplier = mergedState.upgrades
                     .filter(u => u.type === 'global')
                     .reduce((acc, u) => acc.times(Decimal.pow(u.baseMultiplier, u.owned)), new Decimal(1));
@@ -297,13 +625,14 @@ export default function TestGame() {
                     const genUpgrade = mergedState.upgrades.find(u => u.target === gen.id);
                     const genMultiplier = genUpgrade ? Decimal.pow(genUpgrade.baseMultiplier, genUpgrade.owned) : new Decimal(1);
                     return total.plus(gen.owned.times(gen.baseEnergy).times(genMultiplier));
-                }, new Decimal(0)).times(loadedGlobalMultiplier).times(loadedStardustMultiplier);
+                }, new Decimal(0)).times(loadedGlobalMultiplier).times(loadedStardustMultiplier).times(offlineMultiplier);
 
                 const offlineGain = offlineEPS.times(offlineTime);
                 mergedState.energy = mergedState.energy.plus(offlineGain);
+                mergedState.statistics.totalEnergyGenerated = mergedState.statistics.totalEnergyGenerated.plus(offlineGain);
             }
 
-            setState(mergedState);
+            setGameState(mergedState);
         }
     }, []);
 
@@ -321,25 +650,28 @@ export default function TestGame() {
         };
     }, [saveState]);
 
-    const handleEnergyClick = () => setState(prev => ({ ...prev, energy: prev.energy.plus(energyPerClick) }));
+    const handleEnergyClick = () => setGameState(prev => ({ ...prev, energy: prev.energy.plus(energyPerClick) }));
 
     const getCostScaling = (item) => {
         if (item.type === 'generator') {
             const costReduction = stardustUpgrades.find(u => u.id === 'generator_cost_reduction_1');
-            const reductionFactor = costReduction ? Decimal.pow(costReduction.baseMultiplier, costReduction.owned) : 1;
-            return new Decimal(1.15).times(reductionFactor);
+            const reductionFactor = costReduction ? Decimal.pow(costReduction.baseMultiplier, costReduction.owned) : new Decimal(1);
+            return GAME_CONFIG.GENERATOR_COST_SCALING.times(reductionFactor);
         }
         if (item.type === 'stardust') {
-            return new Decimal(2);
+            return GAME_CONFIG.STARDUST_UPGRADE_COST_SCALING;
         }
-        return new Decimal(1.4);
+        return GAME_CONFIG.UPGRADE_COST_SCALING;
     };
 
     const calculateCost = (item, amount) => {
         const costScaling = getCostScaling(item);
-        return item.baseCost.times(
-            Decimal.pow(costScaling, item.owned)
-                .times(Decimal.pow(costScaling, amount).minus(1))
+        if (amount.eq(1)) {
+            return item.cost;
+        }
+        // 用于批量购买的正确几何级数成本计算
+        return item.cost.times(
+            Decimal.pow(costScaling, amount).minus(1)
                 .div(costScaling.minus(1))
         );
     };
@@ -349,15 +681,37 @@ export default function TestGame() {
         const item = allItems.find(i => i.id === id);
         if (!item) return;
 
+        // Check max level
+        if (item.maxLevel && item.owned.gte(new Decimal(item.maxLevel))) return;
+
         let amount;
         if (rawAmount === 'max') {
             const costScaling = getCostScaling(item);
             const currentCurrency = currency === 'Stardust' ? stardust : energy;
             
-            let maxAmount = currentCurrency.div(item.cost).times(costScaling.minus(1)).plus(1).log(costScaling);
-            amount = Decimal.floor(maxAmount);
+            // 计算能够负担的最大数量
+            let maxAffordable = new Decimal(0);
+            if (costScaling.eq(1)) {
+                maxAffordable = currentCurrency.div(item.cost);
+            } else {
+                const numerator = currentCurrency.div(item.cost).times(costScaling.minus(1)).plus(1);
+                if (numerator.gt(0)) {
+                    maxAffordable = numerator.log(costScaling);
+                }
+            }
+            
+            amount = Decimal.floor(maxAffordable);
+            
+            // 遵守最大等级限制
+            if (item.maxLevel) {
+                amount = Decimal.min(amount, new Decimal(item.maxLevel).minus(item.owned));
+            }
         } else {
             amount = new Decimal(rawAmount);
+            // Respect max level
+            if (item.maxLevel) {
+                amount = Decimal.min(amount, new Decimal(item.maxLevel).minus(item.owned));
+            }
         }
 
         if (!amount || amount.lte(0)) return;
@@ -381,12 +735,14 @@ export default function TestGame() {
             const newState = { ...prev };
             if (currency === 'Stardust') {
                 newState.stardust = newCurrencyValue;
-                newState.stardustUpgrades = prev.stardustUpgrades.map(updateItem);
+                if (item.type === 'stardust') {
+                    newState.stardustUpgrades = prev.stardustUpgrades.map(updateItem);
+                }
             } else {
                 newState.energy = newCurrencyValue;
                 if (item.type === 'generator') {
                     newState.generators = prev.generators.map(updateItem);
-                } else {
+                } else if (item.type === 'upgrade' || item.type === 'global' || item.type === 'synergy' || item.type === 'efficiency') {
                     newState.upgrades = prev.upgrades.map(updateItem);
                 }
             }
@@ -398,6 +754,9 @@ export default function TestGame() {
         const allItems = [...generators, ...upgrades, ...stardustUpgrades];
         const item = allItems.find(i => i.id === id);
         if (!item) return false;
+
+        // Check max level
+        if (item.maxLevel && item.owned.gte(new Decimal(item.maxLevel))) return false;
 
         let amount;
         if (rawAmount === 'max') {
@@ -413,13 +772,48 @@ export default function TestGame() {
         return currentCurrency.gte(totalCost);
     };
 
+
+
+    const handlePrestige = () => {
+        if (canPrestige) {
+            setGameState(prev => {
+                const newPrestigeLevel = prev.prestige.level.plus(1);
+                const newPrestigePoints = prev.prestige.points.plus(nextPrestigeGain);
+                const newPrestigeMultiplier = Decimal.pow(GAME_CONFIG.PRESTIGE_MULTIPLIER, newPrestigePoints);
+                
+                return {
+                    ...getInitialState(),
+                    prestige: {
+                        level: newPrestigeLevel,
+                        points: newPrestigePoints,
+                        multiplier: newPrestigeMultiplier,
+                    },
+                    statistics: {
+                        ...prev.statistics,
+                        totalAscensions: prev.statistics.totalAscensions.plus(1),
+                        totalEnergyGenerated: prev.statistics.totalEnergyGenerated,
+                        totalTimePlayedSeconds: prev.statistics.totalTimePlayedSeconds,
+                        startTime: prev.statistics.startTime,
+                        maxEnergyReached: prev.statistics.maxEnergyReached,
+                        maxStardustReached: prev.statistics.maxStardustReached,
+                    }
+                };
+            });
+        }
+    };
+
     const handleAscend = () => {
         if (canAscend) {
             const stateToKeep = {
                 stardust: gameState.stardust.plus(stardustToGain),
                 stardustUpgrades: gameState.stardustUpgrades,
+                prestige: gameState.prestige,
+                statistics: {
+                    ...gameState.statistics,
+                    totalAscensions: gameState.statistics.totalAscensions.plus(1),
+                },
             };
-            setState({
+            setGameState({
                 ...getInitialState(),
                 ...stateToKeep,
             });
@@ -472,7 +866,7 @@ export default function TestGame() {
                     return {
                         ...g,
                         owned: owned,
-                        cost: g.baseCost.times(Decimal.pow(1.15, owned))
+                        cost: g.baseCost.times(Decimal.pow(GAME_CONFIG.GENERATOR_COST_SCALING, owned))
                     };
                 }),
                 upgrades: initialState.upgrades.map(u => {
@@ -482,7 +876,7 @@ export default function TestGame() {
                     return {
                         ...u,
                         owned: owned,
-                        cost: u.baseCost.times(Decimal.pow(1.4, owned))
+                        cost: u.baseCost.times(Decimal.pow(GAME_CONFIG.UPGRADE_COST_SCALING, owned))
                     };
                 }),
                 stardustUpgrades: initialState.stardustUpgrades.map(u => {
@@ -492,12 +886,12 @@ export default function TestGame() {
                     return {
                         ...u,
                         owned: owned,
-                        cost: u.baseCost.times(Decimal.pow(2, owned))
+                        cost: u.baseCost.times(Decimal.pow(GAME_CONFIG.STARDUST_UPGRADE_COST_SCALING, owned))
                     };
                 }),
             };
 
-            setState(mergedState);
+            setGameState(mergedState);
             setCloudMessage('Game loaded successfully!');
         } catch (err){
             setCloudError(err.message);
@@ -507,91 +901,141 @@ export default function TestGame() {
     };
 
     return (
-        <div className="game-container">
-            <h1 className="game-title">Cosmic Forge</h1>
-            <ResourceDisplay energy={energy} energyPerSecond={energyPerSecond} stardust={stardust} />
-
-            <div className="tab-navigation">
-                <TabButton activeTab={activeTab} tabName="Generators" onClick={setActiveTab} />
-                <TabButton activeTab={activeTab} tabName="Upgrades" onClick={setActiveTab} />
-                <TabButton activeTab={activeTab} tabName="Stardust" onClick={setActiveTab} />
-                <TabButton activeTab={activeTab} tabName="Ascension" onClick={setActiveTab} />
-                <TabButton activeTab={activeTab} tabName="Cloud" onClick={setActiveTab} />
+        <>
+            <div className="cosmic-bg"></div>
+            <div className="particles">
+                {[...Array(9)].map((_, i) => (
+                    <div 
+                        key={i} 
+                        className="particle" 
+                        style={{
+                            width: `${Math.random() * 4 + 2}px`,
+                            height: `${Math.random() * 4 + 2}px`,
+                            animationDelay: `${Math.random() * 6}s`,
+                            animationDuration: `${Math.random() * 4 + 6}s`
+                        }}
+                    ></div>
+                ))}
             </div>
+            <div className="game-container">
+                <h1 className="game-title">Cosmic Forge</h1>
+                <ResourceDisplay 
+                    energy={energy} 
+                    energyPerSecond={gameState.currentEnergyPerSecond || energyPerSecond} 
+                    stardust={stardust} 
+                    quantumEnergy={quantumEnergy}
+                    darkMatter={darkMatter}
+                    prestigePoints={prestige.points}
+                />
 
-            <div className="game-content">
-                {activeTab === 'Generators' && (
-                    <div className="item-list">
-                        <div className="manual-clicker" onClick={handleEnergyClick}>
-                            <h2>Forge Energy</h2>
-                            <p>Click to generate {formatNumber(energyPerClick)} Energy.</p>
+                <div className="tab-navigation">
+                    <TabButton activeTab={activeTab} tabName="Generators" onClick={setActiveTab} />
+                    <TabButton activeTab={activeTab} tabName="Upgrades" onClick={setActiveTab} />
+                    <TabButton activeTab={activeTab} tabName="Stardust" onClick={setActiveTab} />
+                    <TabButton activeTab={activeTab} tabName="Ascension" onClick={setActiveTab} />
+                    <TabButton activeTab={activeTab} tabName="Prestige" onClick={setActiveTab} />
+                    <TabButton activeTab={activeTab} tabName="Cloud" onClick={setActiveTab} />
+                </div>
+
+                <div className="game-content">
+                    {activeTab === 'Generators' && (
+                        <div className="item-list">
+                            <div className="manual-clicker" onClick={handleEnergyClick}>
+                                <h2>Forge Energy</h2>
+                                <p>Click to generate {formatNumber(energyPerClick)} Energy.</p>
+                            </div>
+                            <BuyAmountController buyAmount={buyAmount} setBuyAmount={setBuyAmount} />
+                            {generators.map(gen => (
+                                <UpgradeButton
+                                    key={gen.id}
+                                    item={{
+                                        ...gen,
+                                        description: `Generates ${formatNumber(gen.baseEnergy.times(synergyMultiplier).times(efficiencyMultiplier))} Energy/s each. Tier ${gen.tier} generator.`
+                                    }}
+                                    onBuy={() => buyItem(gen.id, buyAmount, 'Energy')}
+                                    canAfford={canAfford(gen.id, buyAmount, 'Energy')}
+                                    isMaxed={false}
+                                    currency="Energy"
+                                />
+                            ))}
                         </div>
-                        <BuyAmountController buyAmount={buyAmount} setBuyAmount={setBuyAmount} />
-                        {generators.map(gen => (
-                            <UpgradeButton
-                                key={gen.id}
-                                item={gen}
-                                onBuy={() => buyItem(gen.id, buyAmount, 'Energy')}
-                                canAfford={canAfford(gen.id, buyAmount, 'Energy')}
-                                isMaxed={false}
-                                currency="Energy"
-                            />
-                        ))}
-                    </div>
-                )}
+                    )}
 
-                {activeTab === 'Upgrades' && (
-                    <div className="item-list">
-                        <BuyAmountController buyAmount={buyAmount} setBuyAmount={setBuyAmount} />
-                        {upgrades.map(upg => (
-                            <UpgradeButton
-                                key={upg.id}
-                                item={upg}
-                                onBuy={() => buyItem(upg.id, buyAmount, 'Energy')}
-                                canAfford={canAfford(upg.id, buyAmount, 'Energy')}
-                                isMaxed={false}
-                                currency="Energy"
-                            />
-                        ))}
-                    </div>
-                )}
+                    {activeTab === 'Upgrades' && (
+                        <div className="item-list">
+                            <BuyAmountController buyAmount={buyAmount} setBuyAmount={setBuyAmount} />
+                            {upgrades.map(upg => (
+                                <UpgradeButton
+                                    key={upg.id}
+                                    item={{
+                                        ...upg,
+                                        description: `${upg.description} ${upg.maxLevel ? `(Max: ${upg.maxLevel})` : ''}`
+                                    }}
+                                    onBuy={() => buyItem(upg.id, buyAmount, 'Energy')}
+                                    canAfford={canAfford(upg.id, buyAmount, 'Energy')}
+                                    isMaxed={upg.maxLevel && upg.owned.gte(new Decimal(upg.maxLevel))}
+                                    currency="Energy"
+                                />
+                            ))}
+                        </div>
+                    )}
 
-                {activeTab === 'Stardust' && (
-                    <div className="item-list">
-                        <BuyAmountController buyAmount={buyAmount} setBuyAmount={setBuyAmount} />
-                        {stardustUpgrades.map(upg => (
-                            <UpgradeButton
-                                key={upg.id}
-                                item={upg}
-                                onBuy={() => buyItem(upg.id, buyAmount, 'Stardust')}
-                                canAfford={canAfford(upg.id, buyAmount, 'Stardust')}
-                                isMaxed={false}
-                                currency="Stardust"
-                            />
-                        ))}
-                    </div>
-                )}
+                    {activeTab === 'Stardust' && (
+                        <div className="item-list">
+                            <div className="stardust-info">
+                                <h3>Stardust Power</h3>
+                                <p>Current Stardust Multiplier: <span className="text-accent">x{formatNumber(stardustMultiplier)}</span></p>
+                                <p>Energy from Stardust: <span className="text-accent">x{formatNumber(energyFromStardustMultiplier)}</span></p>
+                            </div>
+                            <BuyAmountController buyAmount={buyAmount} setBuyAmount={setBuyAmount} />
+                            {stardustUpgrades.map(upg => (
+                                <UpgradeButton
+                                    key={upg.id}
+                                    item={{
+                                        ...upg,
+                                        description: `${upg.description} ${upg.maxLevel ? `(Max: ${upg.maxLevel})` : ''}`
+                                    }}
+                                    onBuy={() => buyItem(upg.id, buyAmount, 'Stardust')}
+                                    canAfford={canAfford(upg.id, buyAmount, 'Stardust')}
+                                    isMaxed={upg.maxLevel && upg.owned.gte(new Decimal(upg.maxLevel))}
+                                    currency="Stardust"
+                                />
+                            ))}
+                        </div>
+                    )}
 
-                {activeTab === 'Ascension' && (
-                    <AscensionButton
-                        onAscend={handleAscend}
-                        canAscend={canAscend}
-                        stardustToGain={stardustToGain}
-                    />
-                )}
 
-                {activeTab === 'Cloud' && (
-                    <CloudStorage
-                        email={email}
-                        setEmail={setEmail}
-                        onSave={handleCloudSave}
-                        onLoad={handleCloudLoad}
-                        loading={cloudLoading}
-                        error={cloudError}
-                        message={cloudMessage}
-                    />
-                )}
+
+                    {activeTab === 'Prestige' && (
+                        <PrestigePanel
+                            prestige={prestige}
+                            onPrestige={handlePrestige}
+                            nextPrestigeGain={nextPrestigeGain}
+                            canPrestige={canPrestige}
+                        />
+                    )}
+
+                    {activeTab === 'Ascension' && (
+                        <AscensionButton
+                            onAscend={handleAscend}
+                            canAscend={canAscend}
+                            stardustToGain={stardustToGain}
+                        />
+                    )}
+
+                    {activeTab === 'Cloud' && (
+                        <CloudStorage
+                            email={email}
+                            setEmail={setEmail}
+                            onSave={handleCloudSave}
+                            onLoad={handleCloudLoad}
+                            loading={cloudLoading}
+                            error={cloudError}
+                            message={cloudMessage}
+                        />
+                    )}
+                </div>
             </div>
-        </div>
+        </>
     );
 }

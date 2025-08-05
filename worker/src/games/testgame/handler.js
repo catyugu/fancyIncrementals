@@ -10,12 +10,34 @@ export async function saveGame(request, env) {
             throw new Error("SAVE_SECRET is not defined in the worker environment.");
         }
 
-        const { email, energy, stardust, generators, upgrades } = await request.json();
+        const { 
+            email, 
+            energy, 
+            stardust, 
+            quantumEnergy, 
+            darkMatter, 
+            generators, 
+            upgrades, 
+            stardustUpgrades, 
+            prestige, 
+            statistics 
+        } = await request.json();
+        
         if (!email) {
             return newResponse({ error: 'Email is required' }, 400);
         }
 
-        const gameState = { energy, stardust, generators, upgrades };
+        const gameState = { 
+            energy, 
+            stardust, 
+            quantumEnergy, 
+            darkMatter, 
+            generators, 
+            upgrades, 
+            stardustUpgrades, 
+            prestige, 
+            statistics 
+        };
         const gameStateString = JSON.stringify(gameState);
         const hash = await generateHash(gameStateString, SAVE_SECRET);
 
